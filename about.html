@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>About Us - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>About the Volleyball Team</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="schedule.html">Schedule</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="aboutContent">
+      <!-- About content loaded dynamically -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team</p>
+  </footer>
+
+<script>
+  // Your original Firebase config here
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Load about content from Firebase
+  function loadAbout() {
+    database.ref("siteContent/about").on("value", snapshot => {
+      const data = snapshot.val();
+      if (!data) {
+        document.getElementById("aboutContent").innerHTML = "<p>About information is not available at the moment.</p>";
+        return;
+      }
+      document.getElementById("aboutContent").innerHTML = `
+        <h2>${data.title || "About Us"}</h2>
+        <p>${data.description || ""}</p>
+      `;
+    });
+  }
+
+  loadAbout();
+</script>
+</body>
+</html>

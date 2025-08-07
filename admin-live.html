@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Live Matches</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    main { max-width: 1000px; margin: auto; padding: 1rem; }
+    h2, h3 { color: #003366; }
+    button {
+      background: #003366; color: white; border: none; cursor: pointer;
+      padding: 0.4rem 1rem; margin: 0.2rem;
+      border-radius: 4px;
+    }
+    button:hover { background: #0055aa; }
+    .btn-danger { background: #cc3333; }
+    .btn-danger:hover { background: #aa2222; }
+    input, textarea {
+      width: 100%; padding: 0.5rem; margin: 0.3rem 0 1rem 0;
+      border-radius: 4px; border: 1px solid #ccc;
+    }
+    .box {
+      background: #000000; padding: 1rem; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem;
+    }
+    iframe { max-width: 100%; }
+    nav ul { list-style: none; display: flex; padding: 0; background: #003366; margin: 0; }
+    nav ul li { margin: 0; }
+    nav ul li a {
+      display: block; color: white; padding: 1rem; text-decoration: none;
+    }
+    nav ul li a:hover { background: #0055aa; }
+    header h1 { text-align: center; padding: 1rem; background: #003366; color: white; margin: 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Admin Live Matches</h1>
+  <nav>
+    <ul>
+      <li><a href="admin-index.html">Home</a></li>
+      <li><a href="admin-team.html">Teams</a></li>
+      <li><a href="admin-schedule.html">Schedule</a></li>
+      <li><a href="admin-live.html">Live Matches</a></li>
+      <li><a href="admin-contact.html">Contact</a></li>
+      <li><a href="admin-about.html">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="box">
+    <h2>Manage Live Matches</h2>
+    <button onclick="toggleAddMatchForm()">Add New Match</button>
+    <div id="addMatchForm" style="display:none;">
+      <h3>New Match</h3>
+      <input type="text" id="newMatchName" placeholder="Match Name" />
+      <input type="text" id="newTeamA" placeholder="Team A Name" />
+      <input type="text" id="newTeamB" placeholder="Team B Name" />
+      <input type="text" id="newStreamURL" placeholder="YouTube Embed URL (optional)" />
+      <button onclick="addMatch()">Save</button>
+      <button onclick="toggleAddMatchForm()">Cancel</button>
+    </div>
+    <div id="matchesList"></div>
+  </div>
+
+  <div class="box" id="liveBox" style="display:none;">
+    <h2 id="matchTitle">Match Title</h2>
+    <iframe id="streamFrame" width="100%" height="400" frameborder="0" allowfullscreen></iframe>
+
+    <h3>Live Score</h3>
+    <div style="font-size: 1.5rem; text-align:center; margin-bottom:1rem;">
+      <span id="teamAName">Team A</span>
+      <button onclick="changeScore('scoreA',1)">▲</button>
+      <span id="scoreA">0</span>
+      <button onclick="changeScore('scoreA',-1)">▼</button>
+      -
+      <button onclick="changeScore('scoreB',1)">▲</button>
+      <span id="scoreB">0</span>
+      <button onclick="changeScore('scoreB',-1)">▼</button>
+      <span id="teamBName">Team B</span>
+    </div>
+
+    <div style="text-align:center;">
+      Sets: 
+      <input type="number" id="setA" style="width:60px;"> -
+      <input type="number" id="setB" style="width:60px;">
+      <button onclick="updateSets()">Update Sets</button>
+    </div>
+
+    <button onclick="resetScores()" class="btn-danger">Reset Scores</button>
+
+    <h3>Commentary</h3>
+    <div id="commentaryBox" style="background:#f0f0f0; padding:1rem; height:120px; overflow-y:auto;"></div>
+    <textarea id="inputComment" placeholder="Add commentary..."></textarea>
+    <button onclick="addComment()">Add Comment</button>
+  </div>
+</main>
+
+<footer style="text-align:center; padding:1rem; background:#003366; color:white;">
+  &copy; 2025 Volleyball Team Admin
+</footer>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+    authDomain: "volleyball-live-matches.firebaseapp.com",
+    databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+    projectId: "volleyball-live-matches",
+    storageBucket: "volleyball-live-matches.appspot.com",
+    messagingSenderId: "816439415663",
+    appId: "1:816439415663:web:662f0e267a640483a70e9a"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  let selectedMatchId = null;
+
+  function toggleAddMatchForm() {
+    const form = document.getElementById("addMatchForm");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  }
+
+  function addMatch() {
+    const name = document.getElementById("newMatchName").value;
+    const teamA = document.getElementById("newTeamA").value;
+    const teamB = document.getElementById("newTeamB").value;
+    const streamURL = document.getElementById("newStreamURL").value;
+
+    if (!name || !teamA || !teamB) return alert("Fill all fields");
+
+    db.ref("matches").push({
+      matchName: name,
+      teamA: teamA,
+      teamB: teamB,
+      streamURL: streamURL,
+      scoreA: 0,
+      scoreB: 0,
+      setsA: 0,
+      setsB: 0
+    });
+
+    toggleAddMatchForm();
+    loadMatches();
+  }
+
+  function loadMatches() {
+    db.ref("matches").once("value", snapshot => {
+      const list = document.getElementById("matchesList");
+      list.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        const div = document.createElement("div");
+        div.innerHTML = `
+          ${data.matchName} 
+          <button onclick="selectMatch('${child.key}')">Load</button>
+          <button onclick="deleteMatch('${child.key}')" class="btn-danger">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    });
+  }
+
+  function deleteMatch(id) {
+    if (confirm("Delete match?")) {
+      db.ref("matches/" + id).remove();
+      db.ref("comments/" + id).remove();
+      loadMatches();
+    }
+  }
+
+  function selectMatch(id) {
+    selectedMatchId = id;
+    document.getElementById("liveBox").style.display = "block";
+
+    db.ref("matches/" + id).on("value", snap => {
+      const d = snap.val();
+      document.getElementById("matchTitle").textContent = d.matchName;
+      document.getElementById("teamAName").textContent = d.teamA;
+      document.getElementById("teamBName").textContent = d.teamB;
+      document.getElementById("scoreA").textContent = d.scoreA;
+      document.getElementById("scoreB").textContent = d.scoreB;
+      document.getElementById("setA").value = d.setsA;
+      document.getElementById("setB").value = d.setsB;
+
+      const iframe = document.getElementById("streamFrame");
+      if (d.streamURL) {
+        iframe.src = d.streamURL;
+        iframe.style.display = "block";
+      } else {
+        iframe.src = "";
+        iframe.style.display = "none";
+      }
+    });
+
+    const box = document.getElementById("commentaryBox");
+    box.innerHTML = "";
+    db.ref("comments/" + id).on("child_added", snap => {
+      const p = document.createElement("p");
+      p.textContent = snap.val();
+      box.appendChild(p);
+      box.scrollTop = box.scrollHeight;
+    });
+  }
+
+  function changeScore(field, delta) {
+    const scoreEl = document.getElementById(field);
+    let score = parseInt(scoreEl.textContent) || 0;
+    score = Math.max(0, score + delta);
+    scoreEl.textContent = score;
+    const update = {};
+    update[field] = score;
+    db.ref("matches/" + selectedMatchId).update(update);
+  }
+
+  function updateSets() {
+    const setsA = parseInt(document.getElementById("setA").value) || 0;
+    const setsB = parseInt(document.getElementById("setB").value) || 0;
+    db.ref("matches/" + selectedMatchId).update({ setsA, setsB });
+  }
+
+  function resetScores() {
+    if (!selectedMatchId) return;
+    db.ref("matches/" + selectedMatchId).update({
+      scoreA: 0, scoreB: 0, setsA: 0, setsB: 0
+    });
+    db.ref("comments/" + selectedMatchId).remove();
+    document.getElementById("commentaryBox").innerHTML = "";
+  }
+
+  function addComment() {
+    const text = document.getElementById("inputComment").value.trim();
+    if (!text) return;
+    const time = new Date().toLocaleTimeString();
+    db.ref("comments/" + selectedMatchId).push(time + " - " + text);
+    document.getElementById("inputComment").value = "";
+  }
+
+  loadMatches();
+</script>
+</body>
+</html>

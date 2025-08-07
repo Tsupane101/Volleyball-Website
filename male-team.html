@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Male Team - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Our Male Volleyball Teams</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="schedule.html">Schedule</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div id="maleTeamsContainer"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team | <a href="admin-index.html" class="admin-link">Admin Home</a></p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const maleTeamRef = db.ref('siteContent/maleTeam');
+
+    const container = document.getElementById("maleTeamsContainer");
+
+    maleTeamRef.on("value", snapshot => {
+      container.innerHTML = "";
+      snapshot.forEach(teamSnap => {
+        const team = teamSnap.val();
+        const teamDiv = document.createElement("div");
+        teamDiv.classList.add("team-section");
+        const teamHTML = `
+          <h2>${team.teamName || "Team Name"}</h2>
+          <p>Coach: ${team.coachName || "Coach Name"}</p>
+          <div class="players-container">
+            ${(team.players ? Object.values(team.players).map(player => `
+              <div class="player-card">
+                <img src="${player.image || 'images/default-player.png'}" alt="${player.name}" class="player-img">
+                <h4>${player.name}</h4>
+                <p>Position: ${player.position}</p>
+              </div>
+            `).join('') : '<p>No players listed yet.</p>')}
+          </div>
+        `;
+        teamDiv.innerHTML = teamHTML;
+        container.appendChild(teamDiv);
+      });
+    });
+  </script>
+</body>
+</html>

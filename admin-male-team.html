@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Male Team</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Admin Panel - Male Team</h1>
+    <nav>
+      <ul>
+        <li><a href="admin-index.html">Home</a></li>
+        <li><a href="admin-team.html">Team</a></li>
+        <li><a href="admin-schedule.html">Schedule</a></li>
+        <li><a href="admin-contact.html">Contact</a></li>
+        <li><a href="admin-about.html">About</a></li>
+        <li><a href="admin-live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="loginSection">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email"><br><br>
+      <input type="password" id="password" placeholder="Password"><br><br>
+      <button id="loginBtn">Login</button>
+      <p id="loginStatus"></p>
+    </section>
+
+    <section id="adminSection" style="display:none;">
+      <button id="logoutBtn">Logout</button>
+      <h2>Manage Male Teams</h2>
+      <button id="addTeamBtn">Add Team</button>
+      <div id="teamsContainer"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team Admin Panel</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const maleTeamRef = db.ref('siteContent/maleTeam');
+
+    const loginSection = document.getElementById("loginSection");
+    const adminSection = document.getElementById("adminSection");
+    const loginStatus = document.getElementById("loginStatus");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const teamsContainer = document.getElementById("teamsContainer");
+    const addTeamBtn = document.getElementById("addTeamBtn");
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loginSection.style.display = "none";
+        adminSection.style.display = "block";
+        loadTeams();
+      } else {
+        loginSection.style.display = "block";
+        adminSection.style.display = "none";
+      }
+    });
+
+    loginBtn.addEventListener("click", () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      loginStatus.textContent = "Logging in...";
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          loginStatus.textContent = "Login successful!";
+        })
+        .catch(error => {
+          loginStatus.textContent = "Login failed: " + error.message;
+        });
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut();
+    });
+
+    function loadTeams() {
+      maleTeamRef.on("value", snapshot => {
+        teamsContainer.innerHTML = "";
+        snapshot.forEach(teamSnap => {
+          const teamKey = teamSnap.key;
+          const teamData = teamSnap.val();
+          const teamDiv = document.createElement("div");
+          teamDiv.style.border = "1px solid #ccc";
+          teamDiv.style.padding = "10px";
+          teamDiv.style.margin = "10px 0";
+
+          const teamHTML = `
+            <h3>Team: <input type="text" value="${teamData.teamName || ''}" id="teamName-${teamKey}"></h3>
+            <p>Coach: <input type="text" value="${teamData.coachName || ''}" id="coachName-${teamKey}"></p>
+            <button onclick="saveTeam('${teamKey}')">Save Team</button>
+            <button onclick="deleteTeam('${teamKey}')">Delete Team</button>
+            <h4>Players</h4>
+            <div id="players-${teamKey}"></div>
+            <button onclick="addPlayer('${teamKey}')">Add Player</button>
+          `;
+          teamDiv.innerHTML = teamHTML;
+          teamsContainer.appendChild(teamDiv);
+
+          const playersDiv = document.getElementById(`players-${teamKey}`);
+          const players = teamData.players || {};
+          Object.entries(players).forEach(([playerKey, player]) => {
+            const playerDiv = document.createElement("div");
+            playerDiv.innerHTML = `
+              Name: <input type="text" value="${player.name || ''}" id="playerName-${teamKey}-${playerKey}">
+              Position: <input type="text" value="${player.position || ''}" id="playerPos-${teamKey}-${playerKey}">
+              Image URL: <input type="text" value="${player.image || ''}" id="playerImg-${teamKey}-${playerKey}">
+              <button onclick="savePlayer('${teamKey}','${playerKey}')">Save</button>
+              <button onclick="deletePlayer('${teamKey}','${playerKey}')">Delete</button>
+              <br><br>
+            `;
+            playersDiv.appendChild(playerDiv);
+          });
+        });
+      });
+    }
+
+    addTeamBtn.addEventListener("click", () => {
+      const newTeamRef = maleTeamRef.push();
+      newTeamRef.set({
+        teamName: "New Team",
+        coachName: "Coach Name",
+        players: {}
+      });
+    });
+
+    function saveTeam(teamKey) {
+      const name = document.getElementById(`teamName-${teamKey}`).value;
+      const coach = document.getElementById(`coachName-${teamKey}`).value;
+      maleTeamRef.child(teamKey).update({ teamName: name, coachName: coach });
+    }
+
+    function deleteTeam(teamKey) {
+      if (confirm("Delete this team?")) {
+        maleTeamRef.child(teamKey).remove();
+      }
+    }
+
+    function addPlayer(teamKey) {
+      const playerRef = maleTeamRef.child(teamKey).child("players").push();
+      playerRef.set({
+        name: "Player Name",
+        position: "Position",
+        image: ""
+      });
+    }
+
+    function savePlayer(teamKey, playerKey) {
+      const name = document.getElementById(`playerName-${teamKey}-${playerKey}`).value;
+      const position = document.getElementById(`playerPos-${teamKey}-${playerKey}`).value;
+      const image = document.getElementById(`playerImg-${teamKey}-${playerKey}`).value;
+      maleTeamRef.child(`${teamKey}/players/${playerKey}`).set({ name, position, image });
+    }
+
+    function deletePlayer(teamKey, playerKey) {
+      if (confirm("Delete this player?")) {
+        maleTeamRef.child(`${teamKey}/players/${playerKey}`).remove();
+      }
+    }
+  </script>
+</body>
+</html>

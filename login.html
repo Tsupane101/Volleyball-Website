@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Login - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Admin Login</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Public Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Sign In to Admin Panel</h2>
+      <div class="login-form">
+        <input type="email" id="email" placeholder="Email" /><br /><br />
+        <input type="password" id="password" placeholder="Password" /><br /><br />
+        <button id="loginBtn">Login</button>
+        <p id="loginStatus"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team Admin Portal</p>
+  </footer>
+
+  <script>
+    // Firebase Config (old config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const loginBtn = document.getElementById("loginBtn");
+    const loginStatus = document.getElementById("loginStatus");
+
+    loginBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          loginStatus.textContent = "Login successful!";
+          window.location.href = "admin-index.html"; // Redirect after login
+        })
+        .catch((error) => {
+          loginStatus.textContent = "Login failed: " + error.message;
+        });
+    });
+  </script>
+</body>
+</html>

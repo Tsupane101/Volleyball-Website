@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Contact - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Admin: Manage Contact Info</h1>
+    <nav>
+      <ul>
+        <li><a href="admin-index.html">Dashboard</a></li>
+        <li><a href="admin-team.html">Team</a></li>
+        <li><a href="admin-schedule.html">Schedule</a></li>
+        <li><a href="admin-live.html">Live Matches</a></li>
+        <li><a href="admin-contact.html">Contact</a></li>
+        <li><button id="logoutBtn" style="background:#b22222; color:#fff; border:none; padding:5px 10px; cursor:pointer;">Logout</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Edit Contact Information</h2>
+    <form id="contactForm">
+      <label>
+        Phone (Coach):
+        <input type="text" id="phoneCoach" placeholder="+27 82 123 4567" />
+      </label><br /><br />
+      <label>
+        Phone (Team Admin):
+        <input type="text" id="phoneAdmin" placeholder="+27 73 987 6543" />
+      </label><br /><br />
+      <label>
+        Email (General):
+        <input type="email" id="emailGeneral" placeholder="info@volleyballteam.co.za" />
+      </label><br /><br />
+      <label>
+        Email (Recruitment):
+        <input type="email" id="emailRecruit" placeholder="recruit@volleyballteam.co.za" />
+      </label><br /><br />
+      <label>
+        Address:
+        <textarea id="address" rows="3" placeholder="Volleyball Training Court, Main Campus Sports Centre, Johannesburg, South Africa"></textarea>
+      </label><br /><br />
+      <button type="submit">Save Contact Info</button>
+    </form>
+
+    <section>
+      <h3>Social Media Links</h3>
+      <form id="socialForm">
+        <label>
+          Facebook URL:
+          <input type="url" id="facebook" placeholder="https://www.facebook.com/volleyballteam" />
+        </label><br /><br />
+        <label>
+          Twitter URL:
+          <input type="url" id="twitter" placeholder="https://www.twitter.com/volleyballteam" />
+        </label><br /><br />
+        <label>
+          Instagram URL:
+          <input type="url" id="instagram" placeholder="https://www.instagram.com/volleyballteam" />
+        </label><br /><br />
+        <label>
+          TikTok URL:
+          <input type="url" id="tiktok" placeholder="https://www.tiktok.com/@volleyballteam" />
+        </label><br /><br />
+        <label>
+          YouTube URL:
+          <input type="url" id="youtube" placeholder="https://www.youtube.com/volleyballteam" />
+        </label><br /><br />
+        <button type="submit">Save Social Links</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team</p>
+  </footer>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+    authDomain: "volleyball-live-matches.firebaseapp.com",
+    databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+    projectId: "volleyball-live-matches",
+    storageBucket: "volleyball-live-matches.appspot.com",
+    messagingSenderId: "816439415663",
+    appId: "1:816439415663:web:662f0e267a640483a70e9a"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  // Check auth state
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      loadContactData();
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    auth.signOut();
+  });
+
+  function loadContactData() {
+    const contactRef = database.ref("siteContent/contact");
+    contactRef.on("value", snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        document.getElementById("phoneCoach").value = data.phoneCoach || "";
+        document.getElementById("phoneAdmin").value = data.phoneAdmin || "";
+        document.getElementById("emailGeneral").value = data.emailGeneral || "";
+        document.getElementById("emailRecruit").value = data.emailRecruit || "";
+        document.getElementById("address").value = data.address || "";
+        if (data.social) {
+          document.getElementById("facebook").value = data.social.facebook || "";
+          document.getElementById("twitter").value = data.social.twitter || "";
+          document.getElementById("instagram").value = data.social.instagram || "";
+          document.getElementById("tiktok").value = data.social.tiktok || "";
+          document.getElementById("youtube").value = data.social.youtube || "";
+        }
+      }
+    });
+  }
+
+  document.getElementById("contactForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const contactData = {
+      phoneCoach: document.getElementById("phoneCoach").value,
+      phoneAdmin: document.getElementById("phoneAdmin").value,
+      emailGeneral: document.getElementById("emailGeneral").value,
+      emailRecruit: document.getElementById("emailRecruit").value,
+      address: document.getElementById("address").value
+    };
+    database.ref("siteContent/contact").update(contactData)
+      .then(() => alert("Contact information saved successfully!"))
+      .catch(err => alert("Error saving data: " + err.message));
+  });
+
+  document.getElementById("socialForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const socialData = {
+      facebook: document.getElementById("facebook").value,
+      twitter: document.getElementById("twitter").value,
+      instagram: document.getElementById("instagram").value,
+      tiktok: document.getElementById("tiktok").value,
+      youtube: document.getElementById("youtube").value
+    };
+    database.ref("siteContent/contact/social").update(socialData)
+      .then(() => alert("Social media links saved successfully!"))
+      .catch(err => alert("Error saving social links: " + err.message));
+  });
+</script>
+
+</body>
+</html>

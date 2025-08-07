@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Home - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Welcome to the Volleyball Team</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="schedule.html">Schedule</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="highlight-section next-match">
+      <h2>Next Match</h2>
+      <div id="nextMatchesContainer">
+        <!-- Next Matches will be loaded here -->
+      </div>
+    </section>
+
+    <section class="highlight-section player-highlight">
+      <h2>Players to Watch</h2>
+      <div id="playersContainer" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+        <!-- Player cards will appear here -->
+      </div>
+    </section>
+
+    <section class="highlight-section news-section">
+      <h2>Latest News</h2>
+      <div id="newsContainer">
+        <!-- News items loaded here -->
+      </div>
+    </section>
+
+    <a href="live.html" class="live-link">Watch Live Matches</a>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team | <a href="admin-index.html" class="admin-link">Admin Home</a></p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const homeRef = db.ref("siteContent/home");
+
+    // Containers
+    const nextMatchesContainer = document.getElementById("nextMatchesContainer");
+    const playersContainer = document.getElementById("playersContainer");
+    const newsContainer = document.getElementById("newsContainer");
+
+    function createNextMatchHTML(match) {
+      return `
+        <p>Our next game is against <strong>${match.teams || ""}</strong> on <strong>${match.date || ""}</strong> at <strong>${match.venue || ""}</strong> at <strong>${match.time || ""}</strong>.</p>
+      `;
+    }
+
+    function createPlayerHTML(player) {
+      return `
+        <div class="player-card" style="border: 1px solid #ccc; padding: 1rem; width: 180px; box-sizing: border-box;">
+          <img src="${player.image || 'images/player-of-week.jpg'}" alt="Player Image" style="width: 100%; height: auto;" />
+          <h3>${player.name || ""}</h3>
+          <p>Position: ${player.position || ""}</p>
+        </div>
+      `;
+    }
+
+    function createNewsHTML(news) {
+      return `
+        <div class="news-item">
+          <p>${news}</p>
+        </div>
+      `;
+    }
+
+    homeRef.on("value", snapshot => {
+      const data = snapshot.val() || {};
+
+      // Next Matches
+      nextMatchesContainer.innerHTML = "";
+      if (Array.isArray(data.nextMatches) && data.nextMatches.length) {
+        data.nextMatches.forEach(match => {
+          nextMatchesContainer.insertAdjacentHTML("beforeend", createNextMatchHTML(match));
+        });
+      } else {
+        nextMatchesContainer.innerHTML = "<p>No upcoming matches scheduled.</p>";
+      }
+
+      // Players to Watch
+      playersContainer.innerHTML = "";
+      if (Array.isArray(data.playersToWatch) && data.playersToWatch.length) {
+        data.playersToWatch.forEach(player => {
+          playersContainer.insertAdjacentHTML("beforeend", createPlayerHTML(player));
+        });
+      } else {
+        playersContainer.innerHTML = "<p>No players highlighted currently.</p>";
+      }
+
+      // Latest News
+      newsContainer.innerHTML = "";
+      if (Array.isArray(data.newsItems) && data.newsItems.length) {
+        data.newsItems.forEach(news => {
+          newsContainer.insertAdjacentHTML("beforeend", createNewsHTML(news));
+        });
+      } else {
+        newsContainer.innerHTML = "<p>No news updates available.</p>";
+      }
+    });
+  </script>
+</body>
+</html>

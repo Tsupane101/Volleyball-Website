@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Matches - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+    main { max-width: 1000px; margin: auto; padding: 1rem; }
+    h2 { text-align: center; color: #003366; margin-top: 1rem; }
+    .match-box {
+      background: rgb(0, 0, 0); padding: 1rem; margin-bottom: 1rem;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    iframe { width: 100%; height: 400px; border: none; margin-top: 1rem; }
+    .scoreboard {
+      text-align: center; font-size: 1.5rem; margin: 1rem 0;
+    }
+    .set-score {
+      text-align: center; font-size: 1rem; margin-bottom: 1rem;
+    }
+    nav ul {
+      list-style: none; margin: 0; padding: 0; display: flex; background: #003366;
+    }
+    nav ul li { margin: 0; }
+    nav ul li a {
+      display: block; color: white; padding: 1rem; text-decoration: none;
+    }
+    nav ul li a:hover { background: #0055aa; }
+    header h1 {
+      background: #003366; color: rgb(0, 0, 0); text-align: center;
+      padding: 1rem; margin: 0;
+    }
+    footer {
+      text-align: center; padding: 1rem; background: #003366; color: rgb(0, 0, 0);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Live Matches</h1>
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="team.html">Team</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="live.html">Live Matches</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <h2>Now Streaming Live</h2>
+  <div id="liveMatches"></div>
+</main>
+
+<footer>
+  <p>&copy; 2025 Volleyball Team | <a href="admin-index.html" style="color:white;">Admin Home</a></p>
+</footer>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+    authDomain: "volleyball-live-matches.firebaseapp.com",
+    databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+    projectId: "volleyball-live-matches",
+    storageBucket: "volleyball-live-matches.appspot.com",
+    messagingSenderId: "816439415663",
+    appId: "1:816439415663:web:662f0e267a640483a70e9a"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function loadLiveMatches() {
+    const container = document.getElementById("liveMatches");
+    db.ref("matches").on("value", snapshot => {
+      container.innerHTML = "";
+      if (!snapshot.exists()) {
+        container.innerHTML = "<p>No live matches currently.</p>";
+        return;
+      }
+
+      snapshot.forEach(child => {
+        const match = child.val();
+        const div = document.createElement("div");
+        div.className = "match-box";
+
+        const title = match.matchName || `${match.teamA} vs ${match.teamB}`;
+        const stream = match.streamURL ? `
+          <iframe src="${match.streamURL}" allowfullscreen></iframe>
+        ` : `<p style="text-align:center;">No live stream available.</p>`;
+
+        div.innerHTML = `
+          <h3 style="text-align:center;">${title}</h3>
+          <div class="scoreboard">
+            ${match.teamA} ${match.scoreA || 0} - ${match.scoreB || 0} ${match.teamB}
+          </div>
+          <div class="set-score">
+            Sets: ${match.setsA || 0} - ${match.setsB || 0}
+          </div>
+          ${stream}
+        `;
+
+        container.appendChild(div);
+      });
+    });
+  }
+
+  loadLiveMatches();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Manage Teams</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Admin Panel - Team Management</h1>
+    <nav>
+      <ul>
+        <li><a href="admin-index.html">Admin Home</a></li>
+        <li><a href="admin-about.html">About</a></li>
+        <li><a href="admin-team.html">Team</a></li>
+        <li><a href="admin-schedule.html">Schedule</a></li>
+        <li><a href="admin-contact.html">Contact</a></li>
+        <li><a href="admin-live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="loginSection">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email"><br><br>
+      <input type="password" id="password" placeholder="Password"><br><br>
+      <button id="loginBtn">Login</button>
+      <p id="loginStatus"></p>
+    </section>
+
+    <section id="adminSection" style="display:none;">
+      <button id="logoutBtn">Logout</button>
+      <h2>Select a Team to Manage</h2>
+      <div class="team-selection">
+        <a href="admin-female-team.html" class="team-link">Female Team</a>
+        <a href="admin-male-team.html" class="team-link">Male Team</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team Admin Panel</p>
+  </footer>
+
+  <script>
+    // Firebase Config (old config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const loginSection = document.getElementById("loginSection");
+    const adminSection = document.getElementById("adminSection");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginStatus = document.getElementById("loginStatus");
+
+    loginBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          loginStatus.textContent = "Login successful!";
+        })
+        .catch((error) => {
+          loginStatus.textContent = "Login failed: " + error.message;
+        });
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut();
+    });
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loginSection.style.display = "none";
+        adminSection.style.display = "block";
+      } else {
+        loginSection.style.display = "block";
+        adminSection.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

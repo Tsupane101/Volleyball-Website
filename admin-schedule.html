@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Schedule - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Admin Match Schedule</h1>
+    <nav>
+      <ul>
+        <li><a href="admin-index.html">Home</a></li>
+        <li><a href="admin-about.html">About</a></li>
+        <li><a href="admin-team.html">Team</a></li>
+        <li><a href="admin-schedule.html">Schedule</a></li>
+        <li><a href="admin-contact.html">Contact</a></li>
+        <li><a href="admin-live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Manage Match Schedule</h2>
+    <section>
+      <h3>Upcoming Fixtures</h3>
+      <form id="fixture-form">
+        <label>
+          Date:
+          <input type="date" id="fixture-date" required />
+        </label>
+        <label>
+          Home Team:
+          <input type="text" id="fixture-home" placeholder="Home Team Name" required />
+        </label>
+        <label>
+          Away Team:
+          <input type="text" id="fixture-away" placeholder="Away Team Name" required />
+        </label>
+        <label>
+          Venue:
+          <input type="text" id="fixture-venue" placeholder="Venue" required />
+        </label>
+        <label>
+          Time:
+          <input type="time" id="fixture-time" required />
+        </label>
+        <button type="submit">Add Fixture</button>
+      </form>
+
+      <table id="fixtures-table" class="match-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Home Team</th>
+            <th>Away Team</th>
+            <th>Venue</th>
+            <th>Time</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h3>Recent Results</h3>
+      <form id="result-form">
+        <label>
+          Date:
+          <input type="date" id="result-date" required />
+        </label>
+        <label>
+          Home Team:
+          <input type="text" id="result-home" placeholder="Home Team Name" required />
+        </label>
+        <label>
+          Away Team:
+          <input type="text" id="result-away" placeholder="Away Team Name" required />
+        </label>
+        <label>
+          Result:
+          <select id="result-outcome" required>
+            <option value="">Select Result</option>
+            <option value="Win">Win</option>
+            <option value="Loss">Loss</option>
+            <option value="Draw">Draw</option>
+          </select>
+        </label>
+        <label>
+          Score:
+          <input type="text" id="result-score" placeholder="e.g. 3 - 1" required />
+        </label>
+        <button type="submit">Add Result</button>
+      </form>
+
+      <table id="results-table" class="match-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Home Team</th>
+            <th>Away Team</th>
+            <th>Result</th>
+            <th>Score</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team</p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    // Correct old Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const fixturesRef = db.ref('schedule/fixtures');
+    const resultsRef = db.ref('schedule/results');
+
+    function addFixtureRow(key, data) {
+      const tbody = document.querySelector("#fixtures-table tbody");
+      let tr = document.createElement("tr");
+      tr.setAttribute("data-key", key);
+      tr.innerHTML = `
+        <td>${data.date}</td>
+        <td>${data.home}</td>
+        <td>${data.away}</td>
+        <td>${data.venue}</td>
+        <td>${data.time}</td>
+        <td><button class="delete-fixture">Delete</button></td>
+      `;
+      tbody.appendChild(tr);
+
+      tr.querySelector(".delete-fixture").addEventListener("click", () => {
+        if (confirm("Delete this fixture?")) {
+          fixturesRef.child(key).remove();
+        }
+      });
+    }
+
+    function addResultRow(key, data) {
+      const tbody = document.querySelector("#results-table tbody");
+      let tr = document.createElement("tr");
+      tr.setAttribute("data-key", key);
+      tr.innerHTML = `
+        <td>${data.date}</td>
+        <td>${data.home}</td>
+        <td>${data.away}</td>
+        <td>${data.result}</td>
+        <td>${data.score}</td>
+        <td><button class="delete-result">Delete</button></td>
+      `;
+      tbody.appendChild(tr);
+
+      tr.querySelector(".delete-result").addEventListener("click", () => {
+        if (confirm("Delete this result?")) {
+          resultsRef.child(key).remove();
+        }
+      });
+    }
+
+    fixturesRef.on("value", snapshot => {
+      const tbody = document.querySelector("#fixtures-table tbody");
+      tbody.innerHTML = "";
+      snapshot.forEach(childSnap => {
+        addFixtureRow(childSnap.key, childSnap.val());
+      });
+    });
+
+    resultsRef.on("value", snapshot => {
+      const tbody = document.querySelector("#results-table tbody");
+      tbody.innerHTML = "";
+      snapshot.forEach(childSnap => {
+        addResultRow(childSnap.key, childSnap.val());
+      });
+    });
+
+    document.getElementById("fixture-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const date = document.getElementById("fixture-date").value;
+      const home = document.getElementById("fixture-home").value.trim();
+      const away = document.getElementById("fixture-away").value.trim();
+      const venue = document.getElementById("fixture-venue").value.trim();
+      const time = document.getElementById("fixture-time").value;
+
+      if (date && home && away && venue && time) {
+        fixturesRef.push({ date, home, away, venue, time });
+        e.target.reset();
+      } else {
+        alert("Please fill all fixture fields.");
+      }
+    });
+
+    document.getElementById("result-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const date = document.getElementById("result-date").value;
+      const home = document.getElementById("result-home").value.trim();
+      const away = document.getElementById("result-away").value.trim();
+      const result = document.getElementById("result-outcome").value;
+      const score = document.getElementById("result-score").value.trim();
+
+      if (date && home && away && result && score) {
+        resultsRef.push({ date, home, away, result, score });
+        e.target.reset();
+      } else {
+        alert("Please fill all result fields.");
+      }
+    });
+  </script>
+</body>
+</html>

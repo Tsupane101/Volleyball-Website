@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contact Us - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Contact the Volleyball Team</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="schedule.html">Schedule</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Get in Touch</h2>
+      <p>If you have any questions, want to join the team, or want to collaborate with us — feel free to reach out!</p>
+    </section>
+
+    <section class="contact-details">
+      <h3>Contact Information</h3>
+      <ul id="contactInfoList">
+        <!-- Contact info loaded dynamically here -->
+      </ul>
+    </section>
+
+    <section class="map-section">
+      <h3>Our Location</h3>
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3582.933515674005!2d28.0473053!3d-26.2041023!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e950b2fe2e18b69%3A0x8bfeee3706ed5c0!2sJohannesburg!5e0!3m2!1sen!2sza!4v1688053962003"
+        width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </section>
+
+    <section>
+      <h3>Follow Us on Social Media</h3>
+      <ul class="social-links" id="socialLinksList">
+        <!-- Social links loaded dynamically here -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team</p>
+  </footer>
+
+<script>
+  // Your original Firebase config here
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Load contact info from Firebase Realtime Database
+  function loadContactInfo() {
+    database.ref("siteContent/contact").on("value", snapshot => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      // Contact info
+      const contactList = document.getElementById("contactInfoList");
+      contactList.innerHTML = `
+        <li><strong>Phone (Coach):</strong> ${data.phoneCoach || "N/A"}</li>
+        <li><strong>Phone (Team Admin):</strong> ${data.phoneAdmin || "N/A"}</li>
+        <li><strong>Email (General):</strong> <a href="mailto:${data.emailGeneral}">${data.emailGeneral || "N/A"}</a></li>
+        <li><strong>Email (Recruitment):</strong> <a href="mailto:${data.emailRecruit}">${data.emailRecruit || "N/A"}</a></li>
+        <li><strong>Address:</strong> ${data.address || "N/A"}</li>
+      `;
+
+      // Social links
+      const social = data.social || {};
+      const socialList = document.getElementById("socialLinksList");
+      socialList.innerHTML = `
+        ${social.facebook ? `<li><a href="${social.facebook}" target="_blank">📘 Facebook</a></li>` : ""}
+        ${social.twitter ? `<li><a href="${social.twitter}" target="_blank">🐦 Twitter</a></li>` : ""}
+        ${social.instagram ? `<li><a href="${social.instagram}" target="_blank">📸 Instagram</a></li>` : ""}
+        ${social.tiktok ? `<li><a href="${social.tiktok}" target="_blank">🎵 TikTok</a></li>` : ""}
+        ${social.youtube ? `<li><a href="${social.youtube}" target="_blank">▶️ YouTube</a></li>` : ""}
+      `;
+    });
+  }
+
+  loadContactInfo();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <nav>
+      <ul>
+        <li><a href="admin-index.html">Home</a></li>
+        <li><a href="admin-team.html">Teams</a></li>
+        <li><a href="admin-schedule.html">Schedule</a></li>
+        <li><a href="admin-live.html">Live Matches</a></li>
+        <li><a href="admin-contact.html">Contact</a></li>
+        <li><a href="admin-about.html">About</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Manage Homepage Content</h2>
+
+    <!-- Next Matches -->
+    <section>
+      <h3>Next Matches</h3>
+      <div id="nextMatchList"></div>
+      <button id="addNextMatchBtn">Add Next Match</button>
+    </section>
+    <hr>
+
+    <!-- Players to Watch -->
+    <section>
+      <h3>Players to Watch</h3>
+      <div id="playerList"></div>
+      <button id="addPlayerBtn">Add Player</button>
+    </section>
+    <hr>
+
+    <!-- Latest News -->
+    <section>
+      <h3>Latest News</h3>
+      <div id="newsList"></div>
+      <button id="addNewsBtn">Add News Item</button>
+    </section>
+
+    <p id="saveStatus"></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const homeRef = db.ref("siteContent/home");
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        loadHomeContent();
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      auth.signOut().then(() => window.location.href = "login.html");
+    });
+
+    // Dynamic Panels
+    const nextMatchList = document.getElementById("nextMatchList");
+    const playerList = document.getElementById("playerList");
+    const newsList = document.getElementById("newsList");
+
+    // Add Next Match Panel
+    document.getElementById("addNextMatchBtn").addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "next-match-item";
+      div.innerHTML = `
+        <label>Date: <input type="date" class="match-date"></label>
+        <label>Teams: <input type="text" class="match-teams" placeholder="Team A vs Team B"></label>
+        <label>Time: <input type="time" class="match-time"></label>
+        <label>Venue: <input type="text" class="match-venue"></label>
+        <button class="removeBtn">Remove</button>
+        <hr>
+      `;
+      div.querySelector(".removeBtn").addEventListener("click", () => div.remove());
+      nextMatchList.appendChild(div);
+    });
+
+    // Add Player Panel
+    document.getElementById("addPlayerBtn").addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "player-item";
+      div.innerHTML = `
+        <label>Name: <input type="text" class="player-name"></label>
+        <label>Position: <input type="text" class="player-position"></label>
+        <label>Image URL: <input type="text" class="player-image"></label>
+        <button class="removeBtn">Remove</button>
+        <hr>
+      `;
+      div.querySelector(".removeBtn").addEventListener("click", () => div.remove());
+      playerList.appendChild(div);
+    });
+
+    // Add News Panel
+    document.getElementById("addNewsBtn").addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "news-item";
+      div.innerHTML = `
+        <textarea class="news-text" rows="3" cols="50" placeholder="Enter news..."></textarea>
+        <button class="removeBtn">Remove</button>
+        <hr>
+      `;
+      div.querySelector(".removeBtn").addEventListener("click", () => div.remove());
+      newsList.appendChild(div);
+    });
+
+    // Load Existing Data
+    function loadHomeContent() {
+      homeRef.once("value").then(snapshot => {
+        const data = snapshot.val();
+
+        // Load Next Matches
+        if (Array.isArray(data?.nextMatches)) {
+          data.nextMatches.forEach(match => {
+            document.getElementById("addNextMatchBtn").click();
+            const item = nextMatchList.lastChild;
+            item.querySelector(".match-date").value = match.date || "";
+            item.querySelector(".match-teams").value = match.teams || "";
+            item.querySelector(".match-time").value = match.time || "";
+            item.querySelector(".match-venue").value = match.venue || "";
+          });
+        }
+
+        // Load Players
+        if (Array.isArray(data?.playersToWatch)) {
+          data.playersToWatch.forEach(player => {
+            document.getElementById("addPlayerBtn").click();
+            const item = playerList.lastChild;
+            item.querySelector(".player-name").value = player.name || "";
+            item.querySelector(".player-position").value = player.position || "";
+            item.querySelector(".player-image").value = player.image || "";
+          });
+        }
+
+        // Load News
+        if (Array.isArray(data?.newsItems)) {
+          data.newsItems.forEach(news => {
+            document.getElementById("addNewsBtn").click();
+            const item = newsList.lastChild;
+            item.querySelector(".news-text").value = news || "";
+          });
+        }
+      });
+    }
+
+    // Save Data on Unload
+    window.addEventListener("beforeunload", () => {
+      const matches = [];
+      nextMatchList.querySelectorAll(".next-match-item").forEach(item => {
+        matches.push({
+          date: item.querySelector(".match-date").value,
+          teams: item.querySelector(".match-teams").value,
+          time: item.querySelector(".match-time").value,
+          venue: item.querySelector(".match-venue").value
+        });
+      });
+
+      const players = [];
+      playerList.querySelectorAll(".player-item").forEach(item => {
+        players.push({
+          name: item.querySelector(".player-name").value,
+          position: item.querySelector(".player-position").value,
+          image: item.querySelector(".player-image").value
+        });
+      });
+
+      const newsItems = [];
+      newsList.querySelectorAll(".news-item").forEach(item => {
+        newsItems.push(item.querySelector(".news-text").value);
+      });
+
+      homeRef.set({
+        nextMatches: matches,
+        playersToWatch: players,
+        newsItems: newsItems
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Female Team - Volleyball Team</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      color: #003366;
+    }
+    .team {
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .team h2 {
+      color: #005bbb;
+    }
+    .coach {
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .players {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .player-card {
+      border: 1px solid #aaa;
+      padding: 10px;
+      border-radius: 6px;
+      width: 180px;
+      text-align: center;
+    }
+    .player-card img {
+      width: 100%;
+      height: auto;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .player-card h4 {
+      margin: 10px 0 5px 0;
+      font-size: 1rem;
+      color: #222;
+    }
+    .player-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Female Team</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="team.html">Team</a></li>
+        <li><a href="schedule.html">Schedule</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="live.html">Live Matches</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div id="femaleTeamsContainer"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Volleyball Team | <a href="admin-index.html" class="admin-link">Admin Home</a></p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWi6AnuSvv4rVfOyuB1hHSXCs_EmH7_w",
+      authDomain: "volleyball-live-matches.firebaseapp.com",
+      databaseURL: "https://volleyball-live-matches-default-rtdb.firebaseio.com/",
+      projectId: "volleyball-live-matches",
+      storageBucket: "volleyball-live-matches.appspot.com",
+      messagingSenderId: "816439415663",
+      appId: "1:816439415663:web:662f0e267a640483a70e9a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const femaleTeamsRef = db.ref('siteContent/femaleTeam');
+    const container = document.getElementById('femaleTeamsContainer');
+
+    femaleTeamsRef.on('value', snapshot => {
+      const teams = snapshot.val();
+      container.innerHTML = '';
+
+      if (!teams) {
+        container.innerHTML = '<p>No female teams available.</p>';
+        return;
+      }
+
+      Object.values(teams).forEach(team => {
+        const teamDiv = document.createElement('div');
+        teamDiv.classList.add('team');
+
+        teamDiv.innerHTML = `
+          <h2>${team.teamName || 'Unnamed Team'}</h2>
+          <p class="coach">Coach: ${team.coachName || 'N/A'}</p>
+          <div class="players"></div>
+        `;
+
+        const playersDiv = teamDiv.querySelector('.players');
+        const players = team.players || {};
+
+        Object.values(players).forEach(player => {
+          const card = document.createElement('div');
+          card.classList.add('player-card');
+
+          card.innerHTML = `
+            <img src="${player.image || 'images/default-player.jpg'}" alt="${player.name}">
+            <h4>${player.name || 'Unnamed Player'}</h4>
+            <p>${player.position || 'Position N/A'}</p>
+          `;
+
+          playersDiv.appendChild(card);
+        });
+
+        container.appendChild(teamDiv);
+      });
+    });
+  </script>
+</body>
+</html>
